@@ -1,5 +1,6 @@
 package net.sparkworks.mapper.service;
 
+import net.sparkworks.mapper.Utils;
 import org.apache.log4j.Logger;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
@@ -24,8 +25,14 @@ public class SenderService {
     RabbitTemplate rabbitTemplate;
 
     @Async
+    public void sendMeasurement(final Utils.ReadingTriple reading) {
+        sendMeasurement(reading.getUri(), reading.getValue(), reading.getTimestamp());
+    }
+
+    @Async
     public void sendMeasurement(final String uri, final Double reading, final long timestamp) {
         final String message = String.format(MESSAGE_TEMPLATE, uri, reading, timestamp);
+        LOGGER.info("sending: " + message);
         rabbitTemplate.send(rabbitQueueSend, rabbitQueueSend, new Message(message.getBytes(), new MessageProperties()));
     }
 }

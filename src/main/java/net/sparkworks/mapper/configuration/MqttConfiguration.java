@@ -1,6 +1,6 @@
 package net.sparkworks.mapper.configuration;
 
-import net.sparkworks.mapper.service.RabbitService;
+import net.sparkworks.mapper.Utils;
 import net.sparkworks.mapper.service.SenderService;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,36 +71,11 @@ public class MqttConfiguration {
         };
     }
 
-    private void parseMessage(String topic, Message<?> messageObj) {
+    private void parseMessage(final String topic, final Message<?> messageObj) {
         final String message = (String) messageObj.getPayload();
-        if (topic.startsWith("meas")) {
-            final String[] parts = topic.split("/");
-            final String gatewayMac = parts[1];
-            final String zigbeeMac = parts[2];
-            final String sensorType = parts[3];
-            LOGGER.info("{gatewayMac:" + gatewayMac + ",zigbeeMac:" + zigbeeMac + ",sensorType:" + sensorType + "}");
-            final String device = "meas-" + gatewayMac + "/" + zigbeeMac;
-            final String capability = sensorType;
-            if (parts.length == 5) {
-                if (capability.startsWith("cur") || capability.startsWith("ecur")) {
-                    final double readingValue = Double.parseDouble(message.replaceAll("[^\\d.]", "")) * 1000;//change to milliAmperes
-                    senderService.sendMeasurement(device + "/" + capability, readingValue, System.currentTimeMillis());
-                } else if (capability.startsWith("vlt")) {
-                    final double readingValue = Double.parseDouble(message.replaceAll("[^\\d.]", ""));
-                    senderService.sendMeasurement(device + "/" + capability, readingValue, System.currentTimeMillis());
-                } else if (capability.startsWith("cnrg")) {
-                    final double readingValue = Double.parseDouble(message.replaceAll("[^\\d.]", ""));
-                    if (cnrgMap.containsKey(topic) && (readingValue > cnrgMap.get(topic))) {
-                        double difReading = (readingValue - cnrgMap.get(topic)) * 1000 * 1000;
-                        senderService.sendMeasurement(device + "/" + capability, difReading, System.currentTimeMillis());
-                    }
-                    cnrgMap.put(topic, readingValue);
-                } else if (capability.startsWith("frq")) {
-                    final double readingValue = Double.parseDouble(message.replaceAll("[^\\d.]", ""));
-                    senderService.sendMeasurement(device + "/" + capability, readingValue, System.currentTimeMillis());
-                }
-            }
+        final Utils.ReadingTriple reading = Utils.parseMessage(topic, message);
+        if (reading != null) {
+            senderService.sendMeasurement(reading);
         }
-
     }
 }
