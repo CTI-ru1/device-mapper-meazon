@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.sparkworks</groupId>
-    <artifactId>device-mapper-template</artifactId>
+    <artifactId>device-mapper-meazon</artifactId>
     <packaging>jar</packaging>
     <name>Device Mapper for Meazon</name>
     <description>A template application used to integrate devices with SparkWorks IoT Analytics Engine</description>
@@ -95,6 +95,9 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <finalName>device-mapper-meazon</finalName>
+                    <classifier>exec</classifier>
+                    <mainClass>net.sparkworks.mapper.Application</mainClass>
+                    <executable>true</executable>
                 </configuration>
             </plugin>
         </plugins>
